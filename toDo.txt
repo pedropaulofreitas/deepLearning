@@ -1,0 +1,5 @@
+>>> lista de coisas para acrescentar no codigo e testar <<<<
+
+1. Usar o pandas para salvar os resultados e tratar os dados
+2. Usar o hyperband para otimizar os hyperparametros
+3.

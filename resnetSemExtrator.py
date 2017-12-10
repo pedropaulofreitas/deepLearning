@@ -4,12 +4,6 @@
 # Pedro Paulo Miranda de Freitas
 #mlp lendo os arquivos do hdf5
 
-
-
-
-
-
-
 import numpy as np
 import os
 import random as rd
@@ -19,13 +13,13 @@ import torch
 import torch.nn as nn
 from torchvision import models
 import transforms
-from PIL import Image
 import re
 import h5py
-
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
 
 #######################################################################################
 ##
@@ -40,17 +34,17 @@ import matplotlib.pyplot as plt
 	###################################################################################
 
 
-tpvec = np.array
-tnvec = np.array
-fpvec = np.array
-fnvec = np.array
-acvec = np.array
+tpvec = []
+tnvec = []
+fpvec = []
+fnvec = []
+acvec = []
 
 
 
 for camada in range(0,17):
 
-	print('abrindo as features em hdf5...')
+	# print('carregando as features em hdf5...')
 	f = h5py.File('features.h5','r')
 	#f = h5py.File('rnd_aloi+aloi_batch_500_training_objs.hdf5','r')
 	X_train = f['.'][str(camada) + '_X_TRAIN'].value
@@ -58,7 +52,7 @@ for camada in range(0,17):
 	X_test = f['.'][str(camada) + '_X_TEST'].value
 	y_test = f['.'][str(camada) + '_y_TEST'].value
 	f.close()
-	print('pronto!')
+	# print('pronto!')
 
 
 	###################################################################################
@@ -68,7 +62,7 @@ for camada in range(0,17):
 	## M is the mini-batch size														# #
 	## N is batch size;
 	## D_in is input dimension;									# #
-	## H is hidden dimension; 
+	## H is hidden dimension;
 	## D_out is output dimension.							# #
 	###################################################################################
 
@@ -77,12 +71,12 @@ for camada in range(0,17):
 	M = 256
 	N = X_train.shape[0]
 	D_in = X_train.shape[1]
-	#H = 100 
+	#H = 100
 	D_out = 1
 
-	 	
-	epochs = 1000
-	learning_rate = 1e-5
+
+	epochs = 256
+	learning_rate = 1e-3
 
 	mlp = nn.Sequential(
 	    nn.Linear(D_in, D_out),
@@ -130,7 +124,7 @@ for camada in range(0,17):
 		# of the model)
 		optimizer.zero_grad()
 
-		print(t, loss.data[0])
+		# print(t, loss.data[0])
 
 		# 3 Backward pass: compute gradient of the loss with respect to the model
 		# parameters
@@ -159,47 +153,41 @@ for camada in range(0,17):
 	test_output = test_output.round().numpy()
 
 
-	
-	# #passando os 2 vetores pra numpy
-
 	# calculando o melhor limiar (o que da melhor acuracia)
+	accuracy = 0
+	limiarFinal = 0
+	for limiar in np.arange(0.01,0.99,0.01):
 
-	# for limiar in np.arange(0.01,0.99,0.01):
+		test_output[test_output < limiar] = 0
+		test_output[test_output >= limiar] = 1
 
-	# 	test_output[test_output < limiar] = 0
-	# 	test_output[test_output >= limiar] = 1
-			
 
-	# True Positive (TP): we predict a label of 1 (positive), and the true label is 1.
-	TP = (np.sum((np.logical_and(test_output == 1, y_test == 1))/np.sum(y_test[y_test == 1])))*100
-	 
-	# True Negative (TN): we predict a label of 0 (negative), and the true label is 0.
-	# TN = np.sum(np.logical_and(pred_labels == 0, true_labels == 0))/(len(true_lables) - np.sum(true_labels[true_labels == 1]))
-	TN = np.sum((np.logical_and(test_output == 0, y_test == 0))/(len(y_test) -np.sum(y_test[y_test == 1])))
-	 
-	# False Positive (FP): we predict a label of 1 (positive), but the true label is 0.
-	FP = np.sum(np.logical_and(test_output == 1, y_test == 0))/(len(y_test) - np.sum(y_test[y_test == 1]))
-	 
-	# False Negative (FN): we predict a label of 0 (negative), but the true label is 1.
-	FN = np.sum(np.logical_and(test_output == 0, y_test == 1))/np.sum(y_test[y_test == 1])
-	
-	#acuracia
-	AC = (np.sum(np.logical_and(test_output , y_test))/np.sum(y_test))*100
+		acuracyNew = accuracy_score(y_test, test_output)
+		if acuracyNew > accuracy:
+			accuracy = acuracyNew
+			limiarFinal = limiar
 
-	
-	print(TP,TN)
+	# print "Train Accuracy :: ", accuracy_score(y_train, test_output)
+	print("camada:", camada)
+	print "Test Accuracy :: ", accuracy
+	# print "Test Accuracy  :: ", accuracy_score(y_test, predictions)
+	confusionMatrix = confusion_matrix(y_test, test_output)
+	print " Confusion matrix ", confusionMatrix
+	print(limiarFinal)
+	acvec.append(accuracy*float(100))
+	tpvec.append((confusionMatrix[1,1]/float(187))*100)
+	tnvec.append((confusionMatrix[0,0]/float(187))*100)
+	fnvec.append((confusionMatrix[0,1]/float(187))*100)
+	fpvec.append((confusionMatrix[1,0]/float(187))*100)
 
-	tpvec = np.append(tpvec,TP)
-	tnvec = np.append(tnvec,TN)
-	fpvec = np.append(fpvec,FP)
-	fnvec = np.append(fnvec,FN)
-	acvec = np.append(acvec,AC)
+print(tpvec)
+plt.plot(acvec, color='green', marker='o',)
+plt.plot(tpvec)
+plt.plot(tnvec)
+plt.show()
 
-	#fim do loop das camadas
+#fim do loop das camadas
 
-print(acvec,tpvec)
-
-# np.savetxt('metricas.out', tnvec, newline=" ")
 	###################################################################################
 	##								REFERENCIAS                                     # #
     ##																				# #

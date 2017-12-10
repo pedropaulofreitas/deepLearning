@@ -72,7 +72,7 @@ def setup_prog():
 #######################################################################################
 
 
-##  FUNÇÃO PARA CALCULAR METRICAS 
+##  FUNÇÃO PARA CALCULAR METRICAS
 def perf_measure(pred_labels, true_labels):
 
 	TP = 0
@@ -83,13 +83,13 @@ def perf_measure(pred_labels, true_labels):
 	# True Positive (TP): we predict a label of 1 (positive), and the true label is 1.
 
 	TP = np.sum(np.logical_and(pred_labels == 1, true_labels == 1))
-	 
+
 	# True Negative (TN): we predict a label of 0 (negative), and the true label is 0.
 	TN = np.sum(np.logical_and(pred_labels == 0, true_labels == 0))
-	 
+
 	# False Positive (FP): we predict a label of 1 (positive), but the true label is 0.
 	FP = np.sum(np.logical_and(pred_labels == 1, true_labels == 0))
-	 
+
 	# False Negative (FN): we predict a label of 0 (negative), but the true label is 1.
 	FN = np.sum(np.logical_and(pred_labels == 0, true_labels == 1))
 
@@ -111,7 +111,10 @@ countList = 0
 
 # from visualize import make_dot
 
-FRAMES_SRC = '/local/home/common/datasets/Reference_Object_frames_skip_17_full_aligned/'
+
+# FRAMES_SRC = '/local/home/common/datasets/Reference_Object_frames_skip_17_full_aligned/'
+FRAMES_SRC = '/media/freitas/common HD/dataset/Reference_Object_frames_skip_17_full_aligned/'
+
 
 nb_frames_offset = 2
 
@@ -389,7 +392,7 @@ for camada in range(0,17):
                 resnet = nn.Sequential(*batata)
                 resnet.add_module("avrPool",nn.AvgPool2d(28,28))
 
-	
+
 	elif camada == 2:
 		resnet = nn.Sequential(*list(resnet.children())[:-5]) #REMOVENDO As ULTIMAs CAMADA DE FC
 		#cria uma lista com todos os filhos
@@ -731,7 +734,7 @@ for camada in range(0,17):
 	print('pronto!')
 
 
-	
+
 # 	###################################################################################
 # 	##															 					# #
 # 	##                  DEFININDO A FULLY CONNECTED E ITERANDO SOBRE A MESMA		# #
@@ -739,7 +742,7 @@ for camada in range(0,17):
 #     ## M is the mini-batch size														# #
 #     ## N is batch size;
 #     ## D_in is input dimension;						                    			# #
-#     ## H is hidden dimension; 
+#     ## H is hidden dimension;
 #     ## D_out is output dimension.						                        	# #
 # 	###################################################################################
 
@@ -748,10 +751,10 @@ for camada in range(0,17):
 # 	M = 256
 # 	N = X_train.shape[0]
 # 	D_in = X_train.shape[1]
-# 	#H = 100 
+# 	#H = 100
 # 	D_out = 1
-	
-	 	
+
+
 # 	epochs = 500
 # 	learning_rate = 1e-3
 
@@ -830,7 +833,7 @@ for camada in range(0,17):
 # 	test_output = test_output.round().numpy()
 
 
-# 	# print(test_output)	
+# 	# print(test_output)
 # 	#passando os 2 vetores pra numpy
 
 # 	#calculando o melhor limiar (o que da melhor acuracia)
@@ -839,7 +842,7 @@ for camada in range(0,17):
 
 # 	# 	test_output[test_output < limiar] = 0
 # 	# 	test_output[test_output >= limiar] = 1
-			
+
 # 	TP, FP, TN, FN = perf_measure(test_output, y_test)
 # 	print(type(TP))
 # 	print(TP,TN)
