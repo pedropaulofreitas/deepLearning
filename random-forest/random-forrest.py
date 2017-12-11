@@ -103,10 +103,10 @@ def main():
         fpvecall.append(fpvec)
         thefile = open(str(numberOfTres) + "arvores" + "camada" + str(camada)+ "_dados" + '.txt', 'w')
         for item in acvec:
-            print(item)
+            # print(item)
             thefile.write("%s\n" % str(item))
-        trefile.close()
-        
+        thefile.close()
+
     # stack metrics
     os.chdir(pwd)
     print('salvando os resultados em hdf5')
