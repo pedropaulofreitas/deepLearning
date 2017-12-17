@@ -19,6 +19,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 
+# hyperband stuff
+# from codes.hyperband import Hyperband
 
 #files path
 FRAMES_SRC = '/media/freitas/common HD/dataset/Reference_Object_frames_skip_17_full_aligned/'
