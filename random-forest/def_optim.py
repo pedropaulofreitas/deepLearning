@@ -15,21 +15,10 @@ class DefOptim:
 
 	def __init__(self, train_fn):
 		self.space = {
-				'activation_dropout_nlayers': hp.choice('activation_dropout_type',
-										[{
-											# 'activation': 'selu',
-											# 'dropout_rate': hp.choice('dr', (0.0, 0.05, 0.1, 0.15)),
-											# 'n_layers': hp.choice('nl', (1, 2, 4, 8)),
-										# },
-										# {
-											'activation': 'Sigmoid',
-											'dropout_rate': hp.choice('dr', (0.0, 0.25, 0.5, 0.75)),
-											'n_layers': hp.choice('nl', (0,1, 2,3,5)),
-										}]),
-				'hidden_layers': hp.quniform('ls', 1, 500, 1 ),
-				'batch_size': hp.choice('bs', ( 32, 64 )),
-				# 'learning_rate': hp.loguniform('lr', -10, -1.5),
-				'weight_decay': hp.loguniform('reg', -14, -3)
+				'n_estimators': hp.qloguniform("nest",1,7,1),
+				'max_features':hp.choice('maxf',("log2", "auto")),
+				'max_depth': hp.quniform('maxd',10,50,1),
+				'min_samples_leaf':hp.choice('leaf',(1,2,3,4,5))
 				}
 
 		self.train_fn = train_fn
@@ -50,12 +39,11 @@ class DefOptim:
 		return self.handle_integers(params)
 
 	def print_params(self,params):
-		pprint({ k: v for k, v in params.items() if not k.startswith('activation_dropout_nlayers')})
-		pprint({ k: v for k, v in params['activation_dropout_nlayers'].items()})
-		print()
+		pprint({ k: v for k, v in params.items() })
+		# pprint({ k: v for k, v in params['activation_dropout_nlayers'].items()})
+		# print('batata')
 
 	def try_params(self, n_iterations, params):
-
 		print("iterations:", n_iterations)
 		self.print_params(params)
 

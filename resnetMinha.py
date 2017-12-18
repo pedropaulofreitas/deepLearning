@@ -72,32 +72,6 @@ def setup_prog():
 #######################################################################################
 
 
-##  FUNÇÃO PARA CALCULAR METRICAS
-def perf_measure(pred_labels, true_labels):
-
-	TP = 0
-	FP = 0
-	TN = 0
-	FN = 0
-
-	# True Positive (TP): we predict a label of 1 (positive), and the true label is 1.
-
-	TP = np.sum(np.logical_and(pred_labels == 1, true_labels == 1))
-
-	# True Negative (TN): we predict a label of 0 (negative), and the true label is 0.
-	TN = np.sum(np.logical_and(pred_labels == 0, true_labels == 0))
-
-	# False Positive (FP): we predict a label of 1 (positive), but the true label is 0.
-	FP = np.sum(np.logical_and(pred_labels == 1, true_labels == 0))
-
-	# False Negative (FN): we predict a label of 0 (negative), but the true label is 1.
-	FN = np.sum(np.logical_and(pred_labels == 0, true_labels == 1))
-
-	return(TP, FP, TN, FN)
-
-#######################################################################################
-
-
 countList = 1
 pwd = os.getcwd()
 feat_imp_vec = 0

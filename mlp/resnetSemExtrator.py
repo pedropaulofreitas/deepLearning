@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 
-
 # Pedro Paulo Miranda de Freitas
 #mlp lendo os arquivos do hdf5
 
@@ -51,7 +50,7 @@ global pwd
 pwd = os.getcwd()
 path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
 
-for camada in range(15,17):
+for camada in range(6,10):
 
 
 	global X_train, y_train, X_test, y_test
@@ -90,7 +89,7 @@ for camada in range(15,17):
 	#tamanho de cada imagem = X_train.shape[1]
 
 	# coisas fixas que nao entram no hyperband
-	learning_rate = 1e-4
+	learning_rate = 1e-3
 	N = X_train.shape[0]
 	D_in = X_train.shape[1]
 	D_out = 1
@@ -120,6 +119,7 @@ for camada in range(15,17):
 		M = params['batch_size']  # M == batch_size
 		weight_decay = params['weight_decay']
 		number_hidden_neurons = params['hidden_layers']
+		dropout_rate = params['activation_dropout_nlayers']['dropout_rate']
 		# hidden_layers = ','.join(["nn.Linear("+str(params['hidden_layers'])+","+str(params['hidden_layers'])+")"] * params['activation_dropout_nlayers']['n_layers'])
 		hidden_layers = {}
 		# args.activation = params['activation_dropout_nlayers']['activation']
@@ -130,20 +130,23 @@ for camada in range(15,17):
 
 		mlp = nn.Sequential(
 			nn.Linear(D_in, number_hidden_neurons),
+
 		)
 
 		for i in range( params['activation_dropout_nlayers']['n_layers']):
+			mlp.add_module("dropout"+str(i), nn.Dropout(p= dropout_rate) )
 			mlp.add_module("hidden"+str(i) , nn.Linear(number_hidden_neurons, number_hidden_neurons))
 
 		mlp.add_module("last",nn.Linear(number_hidden_neurons, D_out))
 		mlp.add_module("sigmoid",nn.Sigmoid())
 		#aqui pode entrar um dropout ou mais camadas
-
+		print(mlp)
 		mlp.cuda() #passando pra gpu
 
-		# optimizer = torch.optim.Adam(mlp.parameters(), lr= learning_rate, weight_decay=weight_decay)
-		optimizer = torch.optim.Adam(mlp.parameters(), lr= learning_rate)
+		optimizer = torch.optim.Adam(mlp.parameters(), lr= learning_rate, weight_decay=weight_decay)
+		# optimizer = torch.optim.Adam(mlp.parameters(), lr= learning_rate)
 
+		counter = 0
 		for t in range(int(iterations)):
 
 			start_index = counter*M
@@ -170,49 +173,51 @@ for camada in range(15,17):
 			loss.backward()
 			# 4 Calling the step function on an Optimizer makes an update to its parameters
 			optimizer.step()
+			if end_index == X_train.shape[0]:
+				counter = 0
+			else:
+				counter += 1
 		# print loss.data.cpu().numpy()[0]
 
-		# ###################################################################################
-		# ##				DANDO UM FOWARD NOS FRAMES DE TEST                              # #
-		# ##                                              								# #
-		# ## 			aproveitando para calcular tp, tn, fp, fn, e acurácia 				# #
-		# ###################################################################################
-		#
-		# test_output = mlp(torch.autograd.Variable(X_test.cuda(),requires_grad=True))
-		# test_output = test_output.data.squeeze().float().cpu()
-		# test_output = test_output.round().numpy()
-		# # calculando o melhor limiar (o que da melhor acuracia)
-		# accuracy = 0
-		# limiarFinal = 0
-		# for limiar in np.arange(0.01,0.99,0.01):
-		#
-		# 	test_output[test_output < limiar] = 0
-		# 	test_output[test_output >= limiar] = 1
-		#
-		#
-		# 	acuracyNew = accuracy_score(y_test, test_output)
-		# 	if acuracyNew > accuracy:
-		# 		accuracy = acuracyNew
-		# 		limiarFinal = limiar
-		#
-		# # print "Train Accuracy :: ", accuracy_score(y_train, test_output)
-		# print("camada:", camada)
-		# print "Test Accuracy :: ", accuracy
-		# # print "Test Accuracy  :: ", accuracy_score(y_test, predictions)
-		# confusionMatrix = confusion_matrix(y_test, test_output)
-		# print " Confusion matrix ", confusionMatrix
-		# print(limiarFinal)
-		# acvec.append(accuracy*float(100))
-		# tpvec.append((confusionMatrix[1,1]/float(187))*100)
-		# tnvec.append((confusionMatrix[0,0]/float(187))*100)
-		# fnvec.append((confusionMatrix[0,1]/float(187))*100)
-		# fpvec.append((confusionMatrix[1,0]/float(187))*100)
+		###################################################################################
+		##				DANDO UM FOWARD NOS FRAMES DE TEST                              # #
+		##                                              								# #
+		## 			aproveitando para calcular tp, tn, fp, fn, e acurácia 				# #
+		###################################################################################
+
+		test_output = mlp(torch.autograd.Variable(X_test.cuda(),requires_grad=True))
+		test_output = test_output.data.squeeze().float().cpu()
+		test_output = test_output.round().numpy()
+		# calculando o melhor limiar (o que da melhor acuracia)
+		accuracy = 0
+		limiarFinal = 0
+		for limiar in np.arange(0.01,0.99,0.01):
+
+			test_output[test_output < limiar] = 0
+			test_output[test_output >= limiar] = 1
+
+
+			acuracyNew = accuracy_score(y_test, test_output)
+			if acuracyNew > accuracy:
+				accuracy = acuracyNew
+				limiarFinal = limiar
+
+		# print "Train Accuracy :: ", accuracy_score(y_train, test_output)
+		print("camada:", camada)
+		print "Test Accuracy :: ", accuracy
+		# print "Test Accuracy  :: ", accuracy_score(y_test, predictions)
+		confusionMatrix = confusion_matrix(y_test, test_output)
+		print " Confusion matrix ", confusionMatrix
+		print(limiarFinal)
+		acvec.append(accuracy*float(100))
+		tpvec.append((confusionMatrix[1,1]/float(187))*100)
+		tnvec.append((confusionMatrix[0,0]/float(187))*100)
+		fnvec.append((confusionMatrix[0,1]/float(187))*100)
+		fpvec.append((confusionMatrix[1,0]/float(187))*100)
 
 		fowardAll = mlp(torch.autograd.Variable(X_train.cuda(), requires_grad=True))
 		# print fowardAll.squeeze().size(), y_train.size()
 		lossTotal = loss_fn(fowardAll.squeeze().double(), torch.autograd.Variable(y_train).double())
-		print lossTotal.data.cpu()[0]
-
 		return { 'loss' : lossTotal.data.cpu()[0]}
 
 
